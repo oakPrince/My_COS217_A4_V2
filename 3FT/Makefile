@@ -4,7 +4,7 @@ CC=gcc217
 # Dependency rules for non-file targets                                         
 all: ft
 clobber: clean
-        rm -f ft_client.o checkerDT.o dNode.o dynarray.o path.o *~
+        rm -f ft.o ft_client.o checkerDT.o dNode.o dynarray.o path.o *~
 clean:
         rm -f ft
 
