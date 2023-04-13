@@ -9,6 +9,7 @@
 #include "dynarray.h"
 #include "dNode.h"
 #include "checkerDT.h"
+#include <stdio.h>
 
 /* A node in a FT */
 struct node {
@@ -31,8 +32,7 @@ struct node {
 /*
   Links new child oNChild into oNParent's children array at index
   ulIndex. Returns SUCCESS if the new child was added successfully,
-  MEMORY_ERROR if allocation fails adding oNChild to the array, or 
-  FILE_ERROR if node is a file and can't have children. 
+  MEMORY_ERROR if allocation fails adding oNChild to the array
 */
 static int Node_addChild(Node_T oNParent, Node_T oNChild,
                          size_t ulIndex) {
@@ -40,7 +40,7 @@ static int Node_addChild(Node_T oNParent, Node_T oNChild,
    assert(oNChild != NULL);
 
    if (oNParent->fileOrDirectory){
-      return FILE_ERROR; 
+      return SUCCESS; 
    }
 
    if(DynArray_addAt(oNParent->oDChildren, ulIndex, oNChild))
@@ -101,14 +101,18 @@ boolean fiOrDi, size_t ulLength, void *pvContents) {
       *poNResult = NULL;
       return iStatus;
    }
+   assert(oPNewPath != NULL); 
    psNew->oPPath = oPNewPath;
 
    /* validate and set the new node's parent */
-   if(oNParent != NULL) {
+   if(oNParent != NULL && !Node_getType(oNParent)){
       size_t ulSharedDepth;
 
       oPParentPath = oNParent->oPPath;
       ulParentDepth = Path_getDepth(oPParentPath);
+      if(Path_getDepth(oPPath) == 0){
+         return NO_SUCH_PATH; 
+      }
       ulSharedDepth = Path_getSharedPrefixDepth(psNew->oPPath,
                                                 oPParentPath);
       /* parent must be an ancestor of child */
@@ -145,7 +149,7 @@ boolean fiOrDi, size_t ulLength, void *pvContents) {
          return NO_SUCH_PATH;
       }
    }
-   psNew->oNParent = oNParent;
+   psNew->oNParent = oNParent; 
    psNew->fileOrDirectory = fiOrDi;  
    if (psNew->fileOrDirectory){
       psNew->contents = malloc(sizeof(void *) * ulLength); 
@@ -154,14 +158,12 @@ boolean fiOrDi, size_t ulLength, void *pvContents) {
    }
 
    /* initialize the new node */
-   if (!psNew->fileOrDirectory){
    psNew->oDChildren = DynArray_new(0);
    if(psNew->oDChildren == NULL) {
       Path_free(psNew->oPPath);
       free(psNew);
       *poNResult = NULL;
       return MEMORY_ERROR;
-   }
    }
 
    /* Link into parent's children list */
@@ -204,7 +206,7 @@ size_t Node_free(Node_T oNNode) {
    if (!oNNode->fileOrDirectory){
         while(DynArray_getLength(oNNode->oDChildren) != 0) {
       ulCount += Node_free(DynArray_get(oNNode->oDChildren, 0));
-   }
+   } 
    DynArray_free(oNNode->oDChildren);
    }
 
@@ -254,7 +256,7 @@ int  Node_getChild(Node_T oNParent, size_t ulChildID,
    assert(poNResult != NULL);
    if (oNParent->fileOrDirectory){
       *poNResult = NULL;
-      return NO_SUCH_PATH;
+      return NOT_A_DIRECTORY;
    }
    /* ulChildID is the index into oNParent->oDChildren */
    if(ulChildID >= Node_getNumChildren(oNParent)) {
@@ -294,7 +296,8 @@ char *Node_toString(Node_T oNNode) {
 
 void * Node_changeFileContents(Node_T oNNode, void *pvNewContents,
                              size_t ulNewLength){
-   void * temp; 
+   void * temp;
+   assert (oNNode != NULL);  
    temp = oNNode->contents; 
    oNNode->contents = realloc(pvNewContents, (sizeof(void*)*(ulNewLength))); 
    if ((oNNode->contents == NULL) && temp != NULL){
@@ -306,6 +309,7 @@ void * Node_changeFileContents(Node_T oNNode, void *pvNewContents,
 }
 
 boolean Node_getType(Node_T oNNode){
+   assert(oNNode != NULL); 
    return oNNode->fileOrDirectory; 
 }
 
