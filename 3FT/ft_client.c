@@ -133,7 +133,6 @@ int main(void) {
          NOT_A_DIRECTORY);
   assert(FT_containsFile("1root/2third/3nopeF") == FALSE);
 
-
   /* calling rm* on a path that doesn't exist should return
      NO_SUCH_PATH, but on a path that does exist with the right
      flavor should return SUCCESS and remove entire subtree rooted at
@@ -157,14 +156,23 @@ int main(void) {
   free(temp);
 
   /* removing the root doesn't uninitialize the structure */
+  fprintf(stderr, "1");
   assert(FT_rmDir("1anotherroot") == CONFLICTING_PATH);
+  fprintf(stderr, "2");
   assert(FT_rmDir("1root") == SUCCESS);
+  fprintf(stderr, "3");
   assert(FT_rmDir("1root") == NO_SUCH_PATH);
+  fprintf(stderr, "4");
   assert(FT_containsDir("1root/2child") == FALSE);
+  fprintf(stderr, "5");
   assert(FT_containsDir("1root") == FALSE);
+  fprintf(stderr, "6");
   assert(FT_rmDir("1root") == NO_SUCH_PATH);
+  fprintf(stderr, "7");
   assert(FT_rmDir("1anotherroot") == NO_SUCH_PATH);
+  fprintf(stderr, "8");
   assert((temp = FT_toString()) != NULL);
+  fprintf(stderr, "9");
   assert(!strcmp(temp,""));
   free(temp);
 

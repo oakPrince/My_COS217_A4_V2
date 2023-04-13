@@ -321,7 +321,8 @@ int FT_rmDir(const char *pcPath){
    int iStatus;
    Node_T oNFound = NULL;
    Path_T temp = NULL; 
-   int tempCheck; 
+   int tempCheck;
+   size_t holder;
    assert(pcPath != NULL);
    assert(CheckerDT_isValid(bIsInitialized, oNRoot, (size_t)ulCount, 
    (size_t)fCount, (size_t)dCount));
@@ -342,8 +343,9 @@ int FT_rmDir(const char *pcPath){
       return NOT_A_DIRECTORY; 
    }
 
-   (*ulCount) -= Node_free(oNFound);
-   (*dCount) -= Node_free(oNFound);
+   holder = Node_free(oNFound);
+   (*ulCount) -= holder;
+   (*dCount) -= holder;
    if(ulCount == 0)
       oNRoot = NULL;
    assert(CheckerDT_isValid(bIsInitialized, oNRoot, (size_t)ulCount, 
@@ -517,7 +519,8 @@ boolean FT_containsFile(const char *pcPath){
 int FT_rmFile(const char *pcPath){
    int iStatus;
    Node_T oNFound = NULL;
-
+   size_t holder;
+   
    assert(pcPath != NULL);
    assert(CheckerDT_isValid(bIsInitialized, oNRoot, (size_t)ulCount, 
    (size_t)fCount, (size_t)dCount));
@@ -527,11 +530,13 @@ int FT_rmFile(const char *pcPath){
    if(iStatus != SUCCESS)
        return iStatus;
 
-    if (!(Node_getType(oNFound))){
+   if (!(Node_getType(oNFound))){
       return NOT_A_FILE; 
    }
-   (*ulCount)-= Node_free(oNFound);
-   (*fCount)-= Node_free(oNFound);
+
+   holder = Node_free(oNFound);
+   (*ulCount) -= holder;
+   (*fCount) -= holder;
    if(ulCount == 0)
       oNRoot = NULL;
    assert(CheckerDT_isValid(bIsInitialized, oNRoot, (size_t)ulCount, 
